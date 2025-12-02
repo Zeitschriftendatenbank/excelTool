@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>excelTabelle – WinIBW 4 (HTML, JScript/ES3)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="./excelTabelle.css" />
+    <script src="./W4DialogFunctions.js"></script>
+</head>
+<body>
+    <div class="tabs">
+        <div id="btn_start" class="tab active" onclick="showTab('start')">Start</div>
+        <div id="btn_cfg" class="tab" onclick="showTab('cfg')">Konfiguration</div>
+        <div id="btn_help" class="tab" onclick="showTab('help')">Hilfe</div>
+    </div>
+    <form id="excelTabelle" onsubmit="return onAccept();">
+        <div id="tab_start" class="panel active">
+            <h3>CSV/TSV/SSV/Excel‑Tabelle erzeugen</h3>
+            <p id="idLabelInfos1a">Schritt 1: Recherchieren Sie nach den Titeln, die in eine csv‑Datei geschrieben
+                werden sollen.</p>
+            <p id="idLabelInfos1b">Schritt 2: Füllen Sie ggf. die Standortangabe im unteren Feld aus.</p>
+            <p id="idLabelInfos1c">Schritt 3: Klicken Sie auf 'Start', um ALLE Datensätze des angezeigten Sets in eine
+                csv‑Datei zu schreiben.</p>
+            <fieldset>
+                <legend>Filter Exemplare</legend>
+                <div class="row">
+                    <div class="col">
+                        <label for="idTextboxFeldSST">PicaPlus-Kategorie</label>
+                        <input type="text" id="idTextboxFeldSST" style="width:100%"/>
+                    </div>
+                    <div class="col">
+                        <label for="idTextboxSST">Inhalt</label>
+                        <input type="text" id="idTextboxSST" style="width:100%" value="" />
+                    </div>
+                </div>
+            </fieldset>
+<fieldset style="margin-top:10px">
+    <legend>Wiederholbare Felder</legend>
+    <label for="idTextboxTrennzeichen">Trennzeichen</label>
+    <input type="text" id="idTextboxTrennzeichen" maxlength="3" value=";"  onchange="trennzeichen(this.value)"/>
+    <div class="hint" id="idLabelInfos5">Welches Trennzeichen soll zur Unterteilung von wiederholbaren
+        Feldern verwendet werden?</div>
+    <div class="hint" id="idLabelInfos6">Standard: Semikolon</div>
+</fieldset>
+<fieldset style="margin-top:10px">
+    <legend>Datei-Optionen</legend>
+    <label for="idSeparator">Dateiendung</label>
+    <select id="idSeparator" onchange="separator(this.value)">
+        <option value=".csv">CSV (Komma separiert)</option>
+        <option value=".tsv">TSV (Tabulator separiert)</option>
+        <option value=".txt">TXT (Semikolon separiert)</option>
+    </select>
+</fieldset>
+
+            <div class="btns">
+                <button id="idButtonStart" class="button" type="submit">Start</button>
+                <button type="button" class="cancel" onclick="onCancel()">Abbrechen</button>
+            </div>
+            <p id="idLabelErgebnis1" class="ok" style="display:block;"></p>
+            <p id="idLabelErgebnis2" class="hint" style="display:block"></p>
+            <input type="text" id="idTextboxPfad" readonly style="width:100%" />
+        </div>
+
+        <div id="tab_cfg" class="panel">
+            <h3>Konfigurationstabelle</h3>
+            <div class="row">
+                <div class="col">
+                    <label for="idTabelle">Zu verwendende Tabelle</label>
+                    <select id="idTabelle" onchange="selectTabelle()" style="width:100%">
+                        <option value="0" selected>Standardtabelle</option>
+                        <option value="1">Benutzertabelle</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row" style="margin-top:10px">
+                <div class="col" style="width:100%">
+                    <div id="idDefault" role="grid" aria-label="PicaPlus-Kategorien">
+                        <div class="tree-header">PicaPlus-Kategorien</div>
+                        <div id="treeBody" class="tree-body" tabindex="0"></div>
+                    </div>
+                </div>
+                <div class="col" >
+                    <label>Eigene Konfiguration</label>
+                    <textarea id="idAuswahlZeilen" wrap="off" style="width:100%"></textarea>
+                    <div class="btns">
+                        <input type="button" class="button" onclick="auswahlSpeichern()" value="Speichern" />
+                        <input type="button" class="cancel" onclick="auswahlLoeschen()" value="Alles löschen" />
+                    </div>
+                    <div>
+                        <p id="idLabelAuswahl" class="ok"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+        <div id="tab_help" class="panel">
+            <h3>Hilfe</h3>
+            <p id="idLabelInfos3">Beim Auswerten der Exemplare werden nur solche berücksichtigt, die mit Ihren Angaben
+                im obigen Feld übereinstimmen. Achten Sie auch auf Groß‑ und Kleinschreibung!</p>
+            <div class="btns">
+                <input type="button" class="button" onclick="runScript('__wikiWinibw()')" value="Allgemeine Hilfe" />
+                <input type="button" class="button" onclick="runScript('__wikiAnzeigen2()')" value="Konfiguration" />
+                <input type="button" class="button" onclick="runScript('__wikiAnzeigen3()')" value="Trennzeichen" />
+            </div>
+        </div>
+
+    <script src="./excelTabelle.js"></script>
+</body>
+</html>
