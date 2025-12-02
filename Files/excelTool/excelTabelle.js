@@ -107,12 +107,7 @@ function trennzeichen(tr) {
     writeProfileString("Exceltool", "Trennzeichen", tr);
     // If parameter provided, set select and return
     var strTrennzeichen = tr;
-    for (var k = 0; k < select.options.length; k++) {
-        if (select.options[k].value === strTrennzeichen) {
-            select.selectedIndex = k;
-            break;
-        }
-    }
+    select.value = strTrennzeichen;
     return strTrennzeichen;
 }
 
