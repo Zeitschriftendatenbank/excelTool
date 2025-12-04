@@ -1,0 +1,5 @@
+source=excelTool/excelTabelle.js, destination=%APPDATA%\OCLC\WinIBW4\excelTool\excelTabelle.js
+source=excelTool/excelTabelle.css, destination=%APPDATA%\OCLC\WinIBW4\excelTool\excelTabelle.css
+source=excelTool/W4DialogFunctions.js, destination=%APPDATA%\OCLC\WinIBW4\excelTool\W4DialogFunctions.js
+source=excelTool/W4DialogStyle.css, destination=%APPDATA%\OCLC\WinIBW4\excelTool\W4DialogStyle.css
+source=excelTool/dialogExcelTabelle.html, destination=%APPDATA%\OCLC\WinIBW4\excelTool\dialogExcelTabelle.html
