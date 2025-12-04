@@ -112,7 +112,6 @@ function __excelWriteCSV(o) {
     excelVars.strSST = o.idTextboxSST;
     excelVars.feldSST = o.idTextboxFeldSST;
     excelVars.strTrennzeichen = activeWindow.getProfileString('Exceltool', 'Trennzeichen', ',');
-    alert('Trennzeichen: ' + excelVars.strTrennzeichen);
     var content,
         ctrl,
         cnt,
@@ -121,7 +120,8 @@ function __excelWriteCSV(o) {
         idx,
         listenPfad,
         satz,
-        outval;
+        outval,
+        ext;
 
     //excelVars.msgboxHeader = 'Schreiben einer CSV‑Datei';
     excelVars.strSystem = application.activeWindow.getVariable('P3GCN');
@@ -157,7 +157,6 @@ function __excelWriteCSV(o) {
     out.createSpecial('ProfD', rel);
     out.setTruncate(true);
     out.writeLine('\ufeff' + header);
-
     var outcnt = 0;
     ctrl.cnt = 0;
     for (idx = 1; idx <= cnt; idx++) {
