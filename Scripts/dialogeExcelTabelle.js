@@ -41,8 +41,7 @@ function __getFileContent(o) {
         inhalt = '',
         defInpFile = utility.newFileInput();
     if (!defInpFile.openSpecial(dir, "\\" + path)) {
-        utility.sentDataToDialog(false);
-        return;
+        utility.sentDataToDialog('');
     }
 
     for (zeile = ""; !defInpFile.isEOF();) {
