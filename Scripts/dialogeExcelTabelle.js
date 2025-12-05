@@ -3,8 +3,7 @@ function excelTabelle() {
 }
 
 function __getFileContent(o) {
-    var inhalt = __excelGetDefinitions(o.etDirectory, o.etDirectory, o.noComments, o.noBlanks);
-    utility.sentDataToDialog(inhalt);
+    utility.sentDataToDialog(__excelGetDefinitions(o.etDirectory, o.etFilePath, o.noComments, o.noBlanks));
 }
 
 function __excelGetDefinitions(dir, path, noCommentsFlag, noBlanksFlag) {
@@ -97,8 +96,8 @@ function __excelWriteCSV(o) {
     excelVars.strSystem = application.activeWindow.getVariable('P3GCN');
     cnt = parseInt(application.activeWindow.getVariable('P3GSZ'));
     try {
-        if (0 === o.idTabelle) {
-            excelVars.csvDefinitions = __readControl(__excelGetDefinitions('ProfD', 'excelTool\\', true, true), true);
+        if ('0' === o.idTabelle) {
+            excelVars.csvDefinitions = __readControl(__excelGetDefinitions('ProfD', 'excelTool\\csvDefinition.txt', true, true), true);
         } else {
             excelVars.csvDefinitions = __readControl(utility.restoreStringData(o.idAuswahlZeilen), false);
         }
