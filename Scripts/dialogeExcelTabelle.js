@@ -2,46 +2,17 @@ function excelTabelle() {
     showDialog('ProfD\\excelTool\\dialogExcelTabelle.html', 200, 100, 800, 450);
 }
 
-/**
- *
- * Read the contents of a file (line by line) and send the resulting text to a dialog.
- *
- * The function attempts to open a file using utility.newFileInput().openSpecial(dir, "\\" + path).
- * If the file cannot be opened, utility.sentDataToDialog(false) is invoked and the function returns.
- * When opened successfully, the file is read line-by-line. Lines may be conditionally skipped:
- * - lines starting with "//" can be skipped if o.zdbNoComments is truthy,
- * - blank lines can be skipped if o.zdbNoBlanks is truthy.
- * After processing the lines the collected content is delivered via utility.sentDataToDialog(inhalt).
- *
- * Note: This comment documents the intended behavior of the implementation. The current source
- * contains a few implementation issues that affect behavior (for example: duplicate variable
- * declarations overwrite flags, a referenced noBlanksFlag identifier is not defined, and the
- * collected content variable may not be appended to). Those issues should be resolved in code
- * for the function to behave as described here.
- *
- * @param {Object} o - Options object controlling file selection and filtering.
- * @param {string} o.theDir - Directory (special/open context) used by openSpecial.
- * @param {string} o.thePath - Relative path or filename to open (will be prefixed with a backslash).
- * @param {boolean} [o.zdbNoComments=false] - If true, skip lines that begin with "//".
- * @param {boolean} [o.zdbNoBlanks=false] - If true, skip blank/empty lines.
- *
- * @returns {void} This function does not return a value. On success it calls utility.sentDataToDialog(inhalt)
- *                   where inhalt is the concatenated/processed file content; on open failure it calls
- *                   utility.sentDataToDialog(false).
- *
- * @throws {Error} No explicit exceptions are thrown by this function in normal operation; underlying
- *                 utility methods may raise errors depending on their implementations.
- */
 function __getFileContent(o) {
-    var dir = o.etDirectory,
-        path = o.etFilePath,
-        noCommentsFlag = o.noComments,
-        noBlanksFlag = o.noBlanks,
-        zeile,
+    var inhalt = __excelGetDefinitions(o.etDirectory, o.etDirectory, o.noComments, o.noBlanks);
+    utility.sentDataToDialog(inhalt);
+}
+
+function __excelGetDefinitions(dir, path, noCommentsFlag, noBlanksFlag) {
+    var zeile,
         inhalt = '',
         defInpFile = utility.newFileInput();
     if (!defInpFile.openSpecial(dir, "\\" + path)) {
-        utility.sentDataToDialog('');
+        return '';
     }
 
     for (zeile = ""; !defInpFile.isEOF();) {
@@ -56,7 +27,7 @@ function __getFileContent(o) {
         inhalt += zeile + "\n";
     }
     defInpFile.close();
-    utility.sentDataToDialog(inhalt);
+    return inhalt;
 }
 
 function __excelWriteAuswahl(o) {
@@ -123,12 +94,11 @@ function __excelWriteCSV(o) {
         outval,
         ext;
 
-    //excelVars.msgboxHeader = 'Schreiben einer CSV‑Datei';
     excelVars.strSystem = application.activeWindow.getVariable('P3GCN');
     cnt = parseInt(application.activeWindow.getVariable('P3GSZ'));
     try {
-        if (0 === o.idTabelle.selectedIndex) {
-            excelVars.csvDefinitions = __readControl(o.idDefault, true);
+        if (0 === o.idTabelle) {
+            excelVars.csvDefinitions = __readControl(__excelGetDefinitions('ProfD', 'excelTool\\', true, true), true);
         } else {
             excelVars.csvDefinitions = __readControl(utility.restoreStringData(o.idAuswahlZeilen), false);
         }
@@ -156,7 +126,7 @@ function __excelWriteCSV(o) {
     var rel = 'listen\\liste_' + __exceldatumHeute() + ext;
     out.createSpecial('ProfD', rel);
     out.setTruncate(true);
-    out.writeLine('\ufeff' + header);
+    out.writeLine(header);
     var outcnt = 0;
     ctrl.cnt = 0;
     for (idx = 1; idx <= cnt; idx++) {

@@ -147,7 +147,7 @@ function waehleKonfigurationstabelle(auswahlTabelle) {
 }
 
 function ladeKonfigurationstabelle() {
-    var standard = getFileContent('ProfD', 'ttlFiles_zdb\\\\zdb_csvDefinition.txt', true, true);
+    var standard = getFileContent('ProfD', 'excelTool\\\\csvDefinition.txt', true, true);
     if (!standard) {
         alert("Fehler beim Laden der Default-CSV-Definition.");
         onCancel();
