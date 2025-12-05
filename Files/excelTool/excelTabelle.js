@@ -40,8 +40,9 @@ function onLoad() {
     document.getElementById('idButtonStart').focus();
     userAuswahlElement = document.getElementById('idAuswahlZeilen');
     trennzeichen();
+    separator()
     einstellungKonfigurationstabelle();
-    ladeKonfigurationstabelleUser();
+    userAuswahlElement.value = getFileContent('ProfD', 'user\\\\csvDefinitionUser.txt', true, true);
     ladeKonfigurationstabelle();
     document.getElementById('treeBody').addEventListener('dblclick', function (e) {
         e = e || window.event;
@@ -60,17 +61,15 @@ function onAccept() {
     document.getElementById('idTextboxPfad').value = '';
 
     try {
-        var message = runScript('__excelWriteCSV').split("\n");
+        var message = runScript('__excelWriteCSV')
         if (!message) {
             alert('Die Liste konnte nicht erstellt werden');
+            return;
         }
-
-        document.getElementById('idLabelErgebnis1').innerHTML = message[0];
-        document.getElementById('idTextboxPfad').value = message[1];
-        alert('Die Exceltabelle wurde erstellt:\n' + message[1]);
-
-        
-
+        var report = message.split("\n");
+        document.getElementById('idLabelErgebnis1').innerHTML = report[0];
+        document.getElementById('idTextboxPfad').value = report[1];
+        alert('Die Exceltabelle wurde erstellt:\n' + report[1]);
     } catch (e) {
         alert('Fehler beim Erstellen der Exceltabelle:\n' + e.message);
     }
@@ -156,14 +155,6 @@ function ladeKonfigurationstabelle() {
     //document.getElementById('idDefault').value = global.default;
     arrayTabelle = standard.split('\n');
     renderTree(arrayTabelle);
-}
-
-function ladeKonfigurationstabelleUser() {
-    userAuswahl = getFileContent('ProfD', 'user\\\\csvDefinitionUser.txt', true, true);
-    if (!userAuswahl) {
-        alert("Fehler beim Laden der User-CSV-Definition.");
-    }
-    userAuswahlElement.value = userAuswahl;
 }
 
 function frageSpeichern() {

@@ -111,6 +111,7 @@ function __excelWriteCSV(o) {
     excelVars.strSST = o.idTextboxSST;
     excelVars.feldSST = o.idTextboxFeldSST;
     excelVars.strTrennzeichen = activeWindow.getProfileString('Exceltool', 'Trennzeichen', ',');
+    excelVars.separator = (getProfileString('Exceltool', 'Separator', ',') === '\\t') ? '\t' : getProfileString('Exceltool', 'Separator', ',')
     var content,
         ctrl,
         cnt,
@@ -134,6 +135,7 @@ function __excelWriteCSV(o) {
     } catch (e) {
         alert('Fehler in Definition: ' + e.message);
         utility.sentDataToDialog(false);
+        return
     }
     content = __replaceDefinitionsWithLookup(excelVars.csvDefinitions);
     if (content === null) {
@@ -144,7 +146,6 @@ function __excelWriteCSV(o) {
 
     // Verzeichnis listen unter ProfD anlegen + Datei schreiben
     var out = utility.newFileOutput();
-    excelVars.separator = getProfileString('Exceltool', 'Separator', ',');
     if (excelVars.separator === ',') {
         ext = '.csv';
     } else if (excelVars.separator === '\t') {
@@ -607,7 +608,7 @@ function __handleRecordPart(satz, ctrl) {
         ctrl[idx].val = ctrl[idx].val.replace(/&amp;/g, '&');
         ctrl[idx].val = ctrl[idx].val.replace(/&lt;/g, '<');
         ctrl[idx].val = ctrl[idx].val.replace(/&gt;/g, '>');
-        line += '"' + ctrl[idx].val.replace(/\u0022/g, "'") + excelVars.separator;
+        line += '"' + ctrl[idx].val.replace(/\u0022/g, "'") + '"' + excelVars.separator;
     }
     line = line.replace(/;$/, ''); ctrl.cnt++; return line;
 }
