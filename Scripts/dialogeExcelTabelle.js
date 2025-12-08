@@ -519,9 +519,34 @@ function __createHeader(ctrl) {
 }
 
 function __handleRecord(satz, ctrl) {
-    var lineblock = '', tmp_satz, tmp_line, idx, loopcnt, occ; loopcnt = __getMaxOccurrence(satz); for (idx = 1; idx <= loopcnt; idx++) { if (excelVars.strSystem == 'K10plus') { occ = '/0' + idx; if (idx < 10) { occ = '/00' + idx; } if (idx > 99) { occ = '/' + idx; } } else { occ = (idx < 10) ? '/0' + idx : '/' + idx; } tmp_satz = __filterCopy(satz, occ); if (tmp_satz !== '') { tmp_line = __handleRecordPart(tmp_satz, ctrl); if (tmp_line !== '') { lineblock += tmp_line + '\n'; } } }
+    var lineblock = '';
+    var loopcnt = __getMaxOccurrence(satz);
+    // If no occurrences, handle fallback for empty SST
+    if (loopcnt === 0 && excelVars.strSST === '') {
+        var tmp_satz = __filterCopy(satz, '/00');
+        return __handleRecordPart(tmp_satz, ctrl);
+    }
+
+    // Loop over all occurrences
+    for (var idx = 1; idx <= loopcnt; idx++) {
+        var occ;
+        if (excelVars.strSystem === 'K10plus') {
+            occ = idx > 99 ? '/' + idx : (idx < 10 ? '/00' + idx : '/0' + idx);
+        } else {
+            occ = idx < 10 ? '/0' + idx : '/' + idx;
+        }
+        var tmp_satz = __filterCopy(satz, occ);
+        if (tmp_satz === '') continue;
+
+        var tmp_line = __handleRecordPart(tmp_satz, ctrl);
+        if (tmp_line !== '') {
+            lineblock += tmp_line + '\n';
+        }
+    }
+
+    // Remove trailing newline
     lineblock = lineblock.replace(/\n$/, '');
-    if (lineblock === '' && excelVars.strSST === '') { tmp_satz = __filterCopy(satz, '/00'); lineblock = __handleRecordPart(tmp_satz, ctrl); }
+
     return lineblock;
 }
 
@@ -556,7 +581,11 @@ function __filterCopy(satz, occ) {
     if (!found) {
         tmp_satz = '';
     }
-    var regex4800 = new RegExp(excelVars.feldSST + ".+" + excelVars.strSST);
+    // escape regex meta-chars so the variable contents are treated as plain strings
+    var _escapeForRegExp = function (s) {
+        return (s || '').toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    var regex4800 = new RegExp(_escapeForRegExp(excelVars.feldSST) + ".+" + _escapeForRegExp(excelVars.strSST));
     return (regex4800.test(tmp_satz)) ? tmp_satz : '';
 }
 
