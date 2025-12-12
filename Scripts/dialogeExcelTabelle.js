@@ -40,7 +40,7 @@ function __excelWriteAuswahl(o) {
 }
 
 function __wikiWinibw() {
-    shellExecute('https://wiki.k10plus.de/x/agDUAw', 'open', '');
+    shellExecute('https://wiki.k10plus.de/spaces/K10PLUS/pages/716865541/WinIBW4-Handbuch', 'open', '');
 }
 
 function __wikiAnzeigen2() {

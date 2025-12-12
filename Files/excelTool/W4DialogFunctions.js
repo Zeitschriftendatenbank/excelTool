@@ -203,6 +203,11 @@ function closeDialog() { external.close(); }
  * type = 2, run script after dialog is closed automatically;
  * 
  * So, don't use the following functions directly in your HTML-dialogs in WinIBW4
+ * 
+ * If the script-function has parameters, the parameters are found in the first form in the dialog.
+ * The parameters are taken from these form elements provided they have either an id or a name
+ * <input>, <select>, <textarea>. 
+ * For radio buttons the value is taken from the selected button in the group with the same name.
  */
 function executeScript(scriptName, type) {
     try {
@@ -212,25 +217,42 @@ function executeScript(scriptName, type) {
             theScriptName = scriptName;           
         } else {
             var form = document.forms[0];
-            var o = '{';
-            var e, key;
+            var o = '';
+            var e, i, key, value;
             for (i = 0; i < form.elements.length; i++) {
                 e = form.elements[i];
-                if (e.id || e.name) {
-                    if (o != '{') o += ',';
-                    key = e.id ? e.id : e.name;   
-                    value = (e.type === 'checkbox') ? e.checked
-                          : (e.type === 'radio') ? (e.checked ? String(e.value).replace(/"/g, '\\"') : '')
-                          : (typeof e.value !== 'undefined' && e.value !== null ? String(e.value).replace(/"/g, '\\"') : '');                    o += '"' + key + '":"' + value + '"';
+                switch (e.nodeName.toLowerCase()) {
+                    case 'input':
+                    case 'select':
+                    case 'textarea': break;
+                    default: continue;
                 }
+                // WIN4-1530 - backwards compatiblity: radio buttons identified by name, other primarily by id
+                key = e.type === 'radio'? e.name: (e.id ? e.id : e.name); 
+                if (!key) continue;
+                var eltType = e.type ? e.type.toLowerCase() : '';
+                switch (eltType) {
+                    case 'checkbox': value = (e.checked).toString();
+                        break;
+                    case 'radio': if (!e.checked) continue;
+                    // FALLTHROUGH
+                    default:
+                        if (e.value === null || e.value === undefined) {
+                            value = '';
+                        } else {
+                            value = e.value.replace(/"/g, '\\"');
+                        }
+                }
+                if (o != '') o += ',';
+                // add "key":"value"
+                o += '"' + key + '":"' + value +  '"';
             }
-            o += '}';
-            //alert(o);
+            o = '({' + o + '})';
             if (form.id) {
-                // Save the form contents for next time the dialog is used                
-                external.dialogFunctionDispatch(["putVar", 'dialog-form-' + form.id, '(' + o + ')']);
+                // Save the form contents for next time the dialog is used
+                external.dialogFunctionDispatch(["putVar", 'dialog-form-' + form.id, o]);
             }
-            theScriptName = scriptName + '(' + o + ')';            
+            theScriptName = scriptName + o;            
         }
         return (type == 1) ? external.dialogFunctionDispatch(["exeScript", theScriptName]) : external.runScriptAfterCloseDialog(theScriptName);
     } catch (e) {

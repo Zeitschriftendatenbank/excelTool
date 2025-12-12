@@ -1,5 +1,5 @@
-# IBW4
+#WinIBW-Exceltool
 
-Fuer den Austausch bei der Weiterentwicklung der WinIBW4
+Download Daten als CSV, TSV oder SSV
 
-Testing ..........
+Siehe [WinIBW4-Handbuch](https://wiki.k10plus.de/spaces/K10PLUS/pages/716865541/WinIBW4-Handbuch)
