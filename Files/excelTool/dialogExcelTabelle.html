@@ -13,7 +13,7 @@
         <div id="btn_cfg" class="tab" onclick="showTab('cfg')">Konfiguration</div>
         <div id="btn_help" class="tab" onclick="showTab('help')">Hilfe</div>
     </div>
-    <form id="excelTabelle" onsubmit="return onAccept();">
+    <form id="excelTabelle" onsubmit="onAccept();">
         <div id="tab_start" class="panel active">
             <h3>CSV/TSV/SSV/Excel‑Tabelle erzeugen</h3>
             <p id="idLabelInfos1a">Schritt 1: Recherchieren Sie nach den Titeln, die in eine csv‑Datei geschrieben
@@ -56,9 +56,6 @@
                 <button id="idButtonStart" class="button" type="submit">Start</button>
                 <button type="button" class="cancel" onclick="onCancel()">Abbrechen</button>
             </div>
-            <p id="idLabelErgebnis1" class="ok" style="display:block;"></p>
-            <p id="idLabelErgebnis2" class="hint" style="display:block"></p>
-            <input type="text" id="idTextboxPfad" readonly style="width:100%" />
         </div>
 
         <div id="tab_cfg" class="panel">
@@ -67,8 +64,8 @@
                 <div class="col">
                     <label for="idTabelle">Zu verwendende Tabelle</label>
                     <select id="idTabelle" onchange="selectTabelle()" style="width:100%">
-                        <option value="0" selected>Standardtabelle</option>
-                        <option value="1">Benutzertabelle</option>
+                        <option value="Standardtabelle" selected>Standardtabelle</option>
+                        <option value="Benutzertabelle">Benutzertabelle</option>
                     </select>
                 </div>
             </div>
@@ -103,7 +100,9 @@
                 <input type="button" class="button" onclick="runScript('__wikiAnzeigen3()')" value="Trennzeichen" />
             </div>
         </div>
-
+            <p id="idLabelErgebnis1" class="ok" style="display:block;"></p>
+            <p id="idLabelErgebnis2" class="hint" style="display:block"></p>
+            <p id="idTextboxPfad" style="width:100%">Inhalt</p>
     <script src="./excelTabelle.js"></script>
 </body>
 </html>

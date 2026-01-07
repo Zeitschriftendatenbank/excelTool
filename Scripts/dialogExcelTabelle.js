@@ -2,7 +2,7 @@ function excelTabelle() {
     showDialog('ProfD\\excelTool\\dialogExcelTabelle.html', 200, 100, 800, 450);
 }
 
-function __getFileContent(o) {
+function __excelGetFileContent(o) {
     utility.sentDataToDialog(__excelGetDefinitions(o.etDirectory, o.etFilePath, o.noComments, o.noBlanks));
 }
 
@@ -96,10 +96,12 @@ function __excelWriteCSV(o) {
     excelVars.strSystem = application.activeWindow.getVariable('P3GCN');
     cnt = parseInt(application.activeWindow.getVariable('P3GSZ'));
     try {
-        if ('0' === o.idTabelle) {
+        if ('Benutzertabelle' === o.idTabelle) {
+            excelVars.csvDefinitions = __readControl(utility.restoreStringData(o.idAuswahlZeilen), false);
+        } else if ('Standardtabelle' === o.idTabelle) {
             excelVars.csvDefinitions = __readControl(__excelGetDefinitions('ProfD', 'excelTool\\csvDefinition.txt', true, true), true);
         } else {
-            excelVars.csvDefinitions = __readControl(utility.restoreStringData(o.idAuswahlZeilen), false);
+            excelVars.csvDefinitions = __readControl(__excelGetDefinitions('ProfD', o.idTabelle, true, true), true);
         }
     } catch (e) {
         alert('Fehler in Definition: ' + e.message);
@@ -155,7 +157,7 @@ function __excelWriteCSV(o) {
             " Titeln die gesuchten Felder nicht gefunden werden.\n";
     }
     shellExecute(listenPfad, 'edit', '');
-    utility.sentDataToDialog(ergebnis + '\nDie Datei wurde gespeichert unter: <a href="file://' + listenPfad + '">file://' + listenPfad + '</a>');
+    utility.sentDataToDialog(ergebnis + '\nDie Datei wurde gespeichert unter: ' + listenPfad);
 }
 
 
@@ -645,33 +647,28 @@ function __objToString(obj) {
     return str.substring(0, str.length - 1) + "\n}";
 }
 
-// Print character codes and visual representation for a string s in ES3 style
-function dumpStringInfo(s) {
-    // Print character codes
-    alert('dumpStringInfo called with s:\n"' + s + '"\n length: ' + s.length + ' \ntype: ' + typeof s);
-    var codes = [];
-    var i, ch, code;
-    s = s || '';
-    for (i = 0; i < s.length; i++) {
-        alert('charAt(' + i + '): "' + s.charAt(i) + '" code: ' + s.charCodeAt(i));
-        codes.push(s.charCodeAt(i));
-    }
-    alert('codes:' + codes.join(','));
+function __excelLoadFilesInProfD() {
+    try {
+        var arNames = [];
+        var theDir = getSpecialDirectory("ProfD");
+        theDir.append("");
 
-    // Print visual representation
-    var visual = [];
-    for (i = 0; i < s.length; i++) {
-        ch = s.charAt(i);
-        code = s.charCodeAt(i);
-        if (ch === ' ') visual.push('[space]');
-        else if (ch === '\n') visual.push('[LF]');
-        else if (ch === '\r') visual.push('[CR]');
-        else if (ch === '\t') visual.push('[TAB]');
-        else if (code === 160) visual.push('[NBSP]');
-        else if (code === 65279) visual.push('[BOM]');
-        else if (code === 8203) visual.push('[ZWSP]');
-        else if (code === 0) visual.push('[NUL]');
-        else visual.push(ch);
-    }
-    alert('visual: ' + visual.join(','));
+        if (!theDir.exists()) {
+            alert("ProfD Verzeichnis existiert nicht.");
+            utility.sentDataToDialog("");
+        }
+
+        var theDirEnum = theDir.directoryEntries;
+        var theItem;
+        while (theDirEnum.hasMoreElements()) {
+            theItem = theDirEnum.getNext();
+            if (theItem.isFile() && -1 < theItem.leafName.indexOf("csvDefinition")) arNames.push(theItem.leafName);
+        }
+        //arNames.sort();
+        var fileList = "";
+        for (var i = 0; i < arNames.length; i++) {
+            fileList += arNames[i] + "\n";
+        }
+        utility.sentDataToDialog(fileList);
+    } catch (e) { alert('excelLoadFilesInProfD: ' + e.name + ': ' + e.message); }
 }

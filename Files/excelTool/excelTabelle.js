@@ -34,13 +34,16 @@ var global = {},
     selectedIndex = -1,
     arrayTabelle = [],
     userAuswahl = '',
-    message = ['', ''];
+    message = ['', ''],
+    form;
 
 function onLoad() {
+    form = document.getElementById('excelTabelle');
     document.getElementById('idButtonStart').focus();
     userAuswahlElement = document.getElementById('idAuswahlZeilen');
     trennzeichen();
-    separator()
+    separator();
+    loadDefsInProfD();
     einstellungKonfigurationstabelle();
     userAuswahlElement.value = getFileContent('ProfD', 'user\\\\csvDefinitionUser.txt', true, true);
     ladeKonfigurationstabelle();
@@ -55,20 +58,20 @@ function onLoad() {
 
 function onAccept() {
     frageSpeichern();
-    message = ['Bitte warten bis Schlussmeldung angezeigt wird!',  'WinIBW zeigt evtl. keine Reaktion bis zum Ende des Downloads.'];
+    message = ['Bitte warten bis Schlussmeldung angezeigt wird!', 'WinIBW zeigt evtl. keine Reaktion bis zum Ende des Downloads.'];
     document.getElementById('idLabelErgebnis1').innerHTML = message[0];
     document.getElementById('idLabelErgebnis2').innerHTML = message[1];
     document.getElementById('idTextboxPfad').value = '';
 
     try {
-        var message = runScript('__excelWriteCSV')
+        message = runScript('__excelWriteCSV')
         if (!message) {
             alert('Die Liste konnte nicht erstellt werden');
             return;
         }
         var report = message.split("\n");
         document.getElementById('idLabelErgebnis1').innerHTML = report[0];
-        document.getElementById('idTextboxPfad').value = report[1];
+        document.getElementById('idTextboxPfad').innerHTML = report[1];
         alert('Die Exceltabelle wurde erstellt:\n' + report[1]);
     } catch (e) {
         alert('Fehler beim Erstellen der Exceltabelle:\n' + e.message);
@@ -81,7 +84,7 @@ function onCancel() {
 }
 
 function separator(sep) {
-    if(typeof sep === 'undefined' || sep === null) {
+    if (typeof sep === 'undefined' || sep === null) {
         sep = getProfileString("Exceltool", "Separator", ",");
         var select = document.getElementById('idSeparator');
         // If parameter provided, set select and return
@@ -118,42 +121,51 @@ function wikiAnzeigen3() { runScript('__wikiAnzeigen3'); }
 // ===== Konfig laden (angepasst auf Textarea statt XUL-Tree) =====
 
 function einstellungKonfigurationstabelle() {
-    waehleKonfigurationstabelle(getProfileInt("Exceltool", "Typ_Tabelle", 0));
+    waehleKonfigurationstabelle(getProfileString("Exceltool", "Typ_Tabelle", "Standardtabelle"));
 }
 
 function selectTabelle() {
-    var auswahlTabelle = document.getElementById("idTabelle").selectedIndex; //gibt 0 oder 1 aus
-    if (1 === auswahlTabelle) {
-        alert("Ihre Konfigurationsdatei wird verwendet.");
-    } else {
-        alert("Die Standard-Konfigurationsdatei wird verwendet.");
-    }
-    waehleKonfigurationstabelle(auswahlTabelle)
+    var val = document.getElementById("idTabelle").value
+    alert("Ausgewählte Tabelle: " + val);
+    waehleKonfigurationstabelle(val)
 }
 
+function findValue(o, v) {
+    for (var i = 0; i < o.length; i++) {
+        if (o[i].value === v) {
+            return i;
+        }
+    }
+}
 
 function waehleKonfigurationstabelle(auswahlTabelle) {
     //wenn eigene Konfigurationsdatei leer, kann diese nicht ausgewählt werden
-    if (auswahlTabelle === 1) {
+    if (auswahlTabelle === 'Benutzertabelle') {
         userAuswahlElement.disabled = false;
-        document.getElementById("idTabelle").selectedIndex = 1;
-        writeProfileInt("Exceltool", "Typ_Tabelle", 1);
+        document.getElementById("idTabelle").selectedIndex = findValue(document.getElementById("idTabelle").options, "Benutzertabelle");
+        writeProfileString("Exceltool", "Typ_Tabelle", "Benutzertabelle");
     } else {
         userAuswahlElement.disabled = true;
-        document.getElementById("idTabelle").selectedIndex = 0;
-        writeProfileInt("Exceltool", "Typ_Tabelle", 0);
+        document.getElementById("idTabelle").selectedIndex = findValue(document.getElementById("idTabelle").options, auswahlTabelle);
+        writeProfileString("Exceltool", "Typ_Tabelle", auswahlTabelle);
+        ladeKonfigurationstabelle(auswahlTabelle);
     }
     return auswahlTabelle;
 }
 
-function ladeKonfigurationstabelle() {
-    var standard = getFileContent('ProfD', 'excelTool\\\\csvDefinition.txt', true, true);
-    if (!standard) {
-        alert("Fehler beim Laden der Default-CSV-Definition.");
+function ladeKonfigurationstabelle(fileName) {
+    var content;
+    if (typeof fileName !== 'undefined' && -1 < fileName.indexOf('csvDefinition')) {
+        content = getFileContent('ProfD', fileName, true, true);
+    } else {
+        content = getFileContent('ProfD', 'excelTool\\\\csvDefinitions.txt', true, true);
+    }
+    if (!content) {
+        alert("Fehler beim Laden der CSV-Definition.");
         onCancel();
     }
     //document.getElementById('idDefault').value = global.default;
-    arrayTabelle = standard.split('\n');
+    arrayTabelle = content.split('\n');
     renderTree(arrayTabelle);
 }
 
@@ -177,8 +189,8 @@ function auswahlLoeschen() {
     if (window.confirm('Soll Ihre Auswahl und Ihre persönliche Konfigurationstabelle gelöscht werden?')) {
         userAuswahlElement.value = '';
         document.getElementById('idLabelAuswahl').innerHTML = 'Auswahl gelöscht.';
-        waehleKonfigurationstabelle(0);
-        writeProfileInt("Exceltool", "Typ_Tabelle", 0);
+        waehleKonfigurationstabelle('Standardtabelle');
+        writeProfileString("Exceltool", "Typ_Tabelle", "Standardtabelle");
         bContentsChanged = false;
     }
 }
@@ -272,7 +284,6 @@ function setSelected(idx) {
 function getFileContent(dir, path, noComments, noBlanks) {
     if (typeof noComments === 'undefined') noComments = false;
     if (typeof noBlanks === 'undefined') noBlanks = false;
-    var form = document.getElementById('excelTabelle');
     var inputDir = document.getElementById('etDirectory');
     if (!inputDir) {
         inputDir = document.createElement('input');
@@ -316,7 +327,7 @@ function getFileContent(dir, path, noComments, noBlanks) {
     }
     inputNoBlanks.value = noBlanks ? '1' : '0';
     try {
-        var content = runScript('__getFileContent');
+        var content = runScript('__excelGetFileContent');
         return content;
     } catch (e) {
         alert("Error: " + e.message);
@@ -329,6 +340,56 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', onLoad);
 } else {
     onLoad();
-    document.getElementById('idLabelErgebnis1').innerHTML = message[0];
+    var mess = document.createElement('div');
+    //document.getElementById('idLabelErgebnis1').innerHTML = message[0];
+    document.getElementById('idLabelErgebnis1').appendChild(mess).innerHTML = message[0];
     document.getElementById('idLabelErgebnis2').innerHTML = message[1];
+}
+
+
+/**
+ * Populates the <select> element with id "idTabelle" from a newline-separated list
+ * returned by runScript('__excelLoadFilesInProfD()').
+ *
+ * Behavior:
+ * - Calls runScript('__excelLoadFilesInProfD()') and returns early if the result is falsy.
+ * - Splits the returned string on '\n' to obtain candidate filenames.
+ * - Trims CR characters and surrounding whitespace from each filename using an ES3-compatible approach.
+ * - Skips empty entries and filenames already present as option values in the target select.
+ * - For each remaining filename, creates an <option> element, sets both value and text to the filename,
+ *   and appends it to the select element.
+ * - Returns early if the select element with id "idTabelle" cannot be found.
+ *
+ * Side effects: Mutates the DOM by appending <option> elements to the select#idTabelle.
+ *
+ * @function loadDefsInProfD
+ * @returns {void} No value is returned.
+ * @see runScript
+ */
+function loadDefsInProfD() {
+    var defFiles = runScript('__excelLoadFilesInProfD()');
+    if (!defFiles) return;
+    var defArray = defFiles.split('\n');
+    var select = document.getElementById('idTabelle');
+    if (!select) return;
+
+    for (var i = 0; i < defArray.length; i++) {
+        var fname = defArray[i];
+        if (!fname) continue;
+        // trim CR and surrounding whitespace (ES3-compatible)
+        fname = fname.replace(/\r/g, '').replace(/^\s+|\s+$/g, '');
+        if (!fname) continue;
+
+        // skip duplicates
+        var exists = false;
+        for (var j = 0; j < select.options.length; j++) {
+            if (select.options[j].value === fname) { exists = true; break; }
+        }
+        if (exists) continue;
+
+        var opt = document.createElement('option');
+        opt.value = fname;
+        opt.text = fname;
+        select.appendChild(opt);
+    }
 }
