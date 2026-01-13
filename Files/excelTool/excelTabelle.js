@@ -64,15 +64,13 @@ function onAccept() {
     document.getElementById('idTextboxPfad').value = '';
 
     try {
-        message = runScript('__excelWriteCSV')
-        if (!message) {
+        var report = runScript('__excelWriteCSV')
+        if (!report) {
             alert('Die Liste konnte nicht erstellt werden');
             return;
         }
-        var report = message.split("\n");
-        document.getElementById('idLabelErgebnis1').innerHTML = report[0];
-        document.getElementById('idTextboxPfad').innerHTML = report[1];
-        alert('Die Exceltabelle wurde erstellt:\n' + report[1]);
+        message = report.split("\n");
+        alert(message[1]);
     } catch (e) {
         alert('Fehler beim Erstellen der Exceltabelle:\n' + e.message);
     }
@@ -182,7 +180,6 @@ function auswahlSpeichern() {
     document.getElementById('idLabelAuswahl').innerHTML = 'Neue Auswahl gespeichert.';
     bContentsChanged = false;
     trennzeichen();
-    bContentsChanged = false;
 }
 
 function auswahlLoeschen() {
@@ -338,11 +335,12 @@ function getFileContent(dir, path, noComments, noBlanks) {
 // Call onLoad when the document is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', onLoad);
+    document.getElementById('idLabelErgebnis1').innerHTML = message[0];
+    document.getElementById('idLabelErgebnis2').innerHTML = message[1];
 } else {
     onLoad();
-    var mess = document.createElement('div');
     //document.getElementById('idLabelErgebnis1').innerHTML = message[0];
-    document.getElementById('idLabelErgebnis1').appendChild(mess).innerHTML = message[0];
+    document.getElementById('idLabelErgebnis1').innerHTML = message[0];
     document.getElementById('idLabelErgebnis2').innerHTML = message[1];
 }
 
