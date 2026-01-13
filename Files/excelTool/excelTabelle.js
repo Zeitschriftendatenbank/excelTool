@@ -156,7 +156,7 @@ function ladeKonfigurationstabelle(fileName) {
     if (typeof fileName !== 'undefined' && -1 < fileName.indexOf('csvDefinition')) {
         content = getFileContent('ProfD', fileName, true, true);
     } else {
-        content = getFileContent('ProfD', 'excelTool\\\\csvDefinitions.txt', true, true);
+        content = getFileContent('ProfD', 'excelTool\\\\csvDefinition.txt', true, true);
     }
     if (!content) {
         alert("Fehler beim Laden der CSV-Definition.");
