@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
     <meta charset="UTF-8">
     <title>excelTabelle – WinIBW 4 (HTML, JScript/ES3)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="./excelTabelle.css" />
     <script src="./W4DialogFunctions.js"></script>
+    <script src="./excelTabelle.js"></script>
+    <script type="text/javascript">setTimeout(function () { onLoad(); }, 5);</script>
 </head>
-
 <body>
     <div class="tabs">
         <div id="btn_start" class="tab active" onclick="showTab('start')">Start</div>
         <div id="btn_cfg" class="tab" onclick="showTab('cfg')">Konfiguration</div>
         <div id="btn_help" class="tab" onclick="showTab('help')">Hilfe</div>
     </div>
-    <form id="excelTabelle" onsubmit="onAccept();">
+    <form id="excelTabelle">
         <div id="tab_start" class="panel active">
             <h3>CSV/TSV/SSV/Excel‑Tabelle erzeugen</h3>
             <p id="idLabelInfos1a">Schritt 1: Recherchieren Sie nach den Titeln, die in eine csv‑Datei geschrieben
@@ -55,9 +55,15 @@
                 </select>
             </fieldset>
             <div class="btns">
-                <button id="idButtonStart" class="button" type="submit">Start</button>
+                <button id="idButtonStart" class="button" type="button" onclick="onAccept();">Start</button>
                 <button type="button" class="cancel" onclick="onCancel()">Abbrechen</button>
             </div>
+            <fieldset id="idErgebnis" hidden>
+            <legend>Ergebnis:</legend>
+            <!--<label>Pfad der Fehlerdatei:</label>-->
+            <output class="text3" id="idPfad"></output>
+        </fieldset>
+
         </div>
         <div id="tab_cfg" class="panel">
             <h3>Konfigurationstabelle</h3>
@@ -101,10 +107,5 @@
             <input type="button" class="button" onclick="runScript('__wikiAnzeigen3()')" value="Trennzeichen" />
         </div>
     </div>
-    <p id="idLabelErgebnis1" class="ok" style="display:block;"></p>
-    <p id="idLabelErgebnis2" class="hint" style="display:block"></p>
-    <p id="idTextboxPfad" style="width:100%"></p>
-    <script src="./excelTabelle.js"></script>
 </body>
-
 </html>

@@ -58,10 +58,9 @@ function onLoad() {
 
 function onAccept() {
     frageSpeichern();
-    message = ['Bitte warten bis Schlussmeldung angezeigt wird!', 'WinIBW zeigt evtl. keine Reaktion bis zum Ende des Downloads.'];
-    document.getElementById('idLabelErgebnis1').innerHTML = message[0];
-    document.getElementById('idLabelErgebnis2').innerHTML = message[1];
-    document.getElementById('idTextboxPfad').value = '';
+    message = ["Bitte warten bis Schlussmeldung angezeigt wird! \n WinIBW zeigt evtl. keine Reaktion bis zum Ende des Downloads."];
+    document.getElementById("idErgebnis").hidden = false;
+    document.getElementById("idPfad").innerText = message[1];
 
     try {
         var report = runScript('__excelWriteCSV')
@@ -70,7 +69,10 @@ function onAccept() {
             return;
         }
         message = report.split("\n");
-        alert(message[1]);
+        document.getElementById("idErgebnis").hidden = false;
+        document.getElementById("idPfad").innerText = message[1];
+
+        //alert(message[1]);
     } catch (e) {
         alert('Fehler beim Erstellen der Exceltabelle:\n' + e.message);
     }
@@ -170,7 +172,7 @@ function ladeKonfigurationstabelle(fileName) {
 function frageSpeichern() {
     if (bContentsChanged) {
         if (confirm('Änderungen in der Konfiguration speichern?')) {
-            auswahlSpeichern()
+            auswahlSpeichern();
         }
     }
 }
@@ -329,19 +331,6 @@ function getFileContent(dir, path, noComments, noBlanks) {
     } catch (e) {
         alert("Error: " + e.message);
     }
-}
-
-// Init beim Laden
-// Call onLoad when the document is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', onLoad);
-    document.getElementById('idLabelErgebnis1').innerHTML = message[0];
-    document.getElementById('idLabelErgebnis2').innerHTML = message[1];
-} else {
-    onLoad();
-    //document.getElementById('idLabelErgebnis1').innerHTML = message[0];
-    document.getElementById('idLabelErgebnis1').innerHTML = message[0];
-    document.getElementById('idLabelErgebnis2').innerHTML = message[1];
 }
 
 
