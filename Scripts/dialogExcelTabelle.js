@@ -8,7 +8,7 @@ function __excelGetFileContent(o) {
 
 function __excelGetDefinitions(dir, path, noCommentsFlag, noBlanksFlag) {
     var zeile,
-        inhalt = '',
+        inhaltsLines = [],
         defInpFile = utility.newFileInput();
     if (!defInpFile.openSpecial(dir, "\\" + path)) {
         return '';
@@ -23,10 +23,10 @@ function __excelGetDefinitions(dir, path, noCommentsFlag, noBlanksFlag) {
         if (noBlanksFlag == '1' && zeile.length === 0) {
             continue;
         }
-        inhalt += zeile + "\n";
+        inhaltsLines.push(zeile);
     }
     defInpFile.close();
-    return inhalt;
+    return inhaltsLines.join("\n");
 }
 
 function __excelWriteAuswahl(o) {
@@ -106,7 +106,7 @@ function __excelWriteCSV(o) {
     } catch (e) {
         alert('Fehler in Definition: ' + e.message);
         utility.sentDataToDialog(false);
-        return
+        return;
     }
     content = __replaceDefinitionsWithLookup(excelVars.csvDefinitions);
     if (content === null) {
@@ -187,9 +187,8 @@ function __readControl(inp, must) {
         if (line.substring(0, 2) == '//') {
             continue;
         }
-        // normalize whitespace and tabs
-        tmp = line.replace(/\t/g, ' ');
-        tmp = tmp.replace(/\s+/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '');
+        // normalize whitespace and tabs in one regex pass
+        tmp = line.replace(/\t+|\s+/g, ' ').replace(/\s+$/, '').replace(/^\s+/, '');
         if (tmp === '') {
             continue;
         }
@@ -242,18 +241,22 @@ function __getExpansionFromP3VTX() {
  */
 function __replaceDefinitionsWithLookup(content) {
     var newc = [];
+    // ES3-compatible plain object map using a prefix to avoid prototype collisions
+    if (!excelVars.csvDefinitionsMap) {
+        excelVars.csvDefinitionsMap = {};
+        excelVars.__csvDefPrefix = excelVars.__csvDefPrefix || 'K:'; // stable prefix
+        for (var k = 0; k < excelVars.csvDefinitions.length; k += 2) {
+            var mapKey = excelVars.__csvDefPrefix + excelVars.csvDefinitions[k];
+            excelVars.csvDefinitionsMap[mapKey] = excelVars.csvDefinitions[k + 1];
+        }
+    }
+    
     for (var i = 0; i < content.length; i += 2) {
         var key = content[i];
         var mask = content[i + 1];
-        var defval = null;
-
-        // Lookup definition in excelVars.csvDefinitions
-        for (var j = 0; j < excelVars.csvDefinitions.length; j += 2) {
-            if (excelVars.csvDefinitions[j] === mask) {
-                defval = excelVars.csvDefinitions[j + 1];
-                break;
-            }
-        }
+        // ES3-safe lookup using the same prefix
+        var lookupKey = (excelVars.__csvDefPrefix || 'K:') + mask;
+        var defval = (excelVars.csvDefinitionsMap[lookupKey] !== undefined) ? excelVars.csvDefinitionsMap[lookupKey] : null;
 
         newc.push(key);
         if (defval === null) {
@@ -587,8 +590,13 @@ function __filterCopy(satz, occ) {
     var _escapeForRegExp = function (s) {
         return (s || '').toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
-    var regex4800 = new RegExp(_escapeForRegExp(excelVars.feldSST) + ".+" + _escapeForRegExp(excelVars.strSST));
-    return (regex4800.test(tmp_satz)) ? tmp_satz : '';
+    // Pre-compile regex only if not already cached
+    var cacheKey = excelVars.feldSST + '|' + excelVars.strSST;
+    if (!excelVars.regex4800Cache || excelVars.regex4800CacheKey !== cacheKey) {
+        excelVars.regex4800Cache = new RegExp(_escapeForRegExp(excelVars.feldSST) + ".+" + _escapeForRegExp(excelVars.strSST));
+        excelVars.regex4800CacheKey = cacheKey;
+    }
+    return (excelVars.regex4800Cache.test(tmp_satz)) ? tmp_satz : '';
 }
 
 function __handleRecordPart(satz, ctrl) {
@@ -604,16 +612,55 @@ function __handleRecordPart(satz, ctrl) {
         str7800 = str7800.substring(0, str7800.indexOf('\n'));
         line += '\"' + str7800 + '\"' + excelVars.separator;
     }
+    // Pre-compile entity replacement regex once if not cached
+    if (!excelVars.entityRegex) {
+        excelVars.entityRegex = /&amp;|&lt;|&gt;/g;
+        excelVars.entityMap = { '&amp;': '&', '&lt;': '<', '&gt;': '>' };
+    }
     idx = -1; while (++idx < ctrl.length) {
-        ctrl[idx].val = ctrl[idx].val.replace(/&amp;/g, '&');
-        ctrl[idx].val = ctrl[idx].val.replace(/&lt;/g, '<');
-        ctrl[idx].val = ctrl[idx].val.replace(/&gt;/g, '>');
+        // Replace all entities in one pass
+        ctrl[idx].val = ctrl[idx].val.replace(excelVars.entityRegex, function(match) {
+            return excelVars.entityMap[match];
+        });
         line += '"' + ctrl[idx].val.replace(/\u0022/g, "'") + '"' + excelVars.separator;
     }
     line = line.replace(/;$/, ''); ctrl.cnt++; return line;
 }
 function __createResult(satz, ctrl) {
-    var tag, suche, regex, group, text, idx = -1, w; while (++idx < ctrl.length) { tag = ctrl[idx].tag; suche = tag + '.+' + ctrl[idx].xsbf; regex = new RegExp(suche, 'g'); group = satz.match(regex); if (group) { var tempArray = [], p; if (ctrl[idx].tag == '031N' || ctrl[idx].tag == '231@') { if (satz.indexOf(excelVars.sbfDescriptor + '0') != -1) { text = group[0].split(excelVars.sbfDescriptor + '0 '); for (p = 0; p < text.length; p++) { tempArray[p] = __convertOrText(text[p], ctrl[idx].spec, ctrl[idx].data); } ctrl[idx].val = tempArray.join(excelVars.strTrennzeichen); } else { for (w = 0; w < group.length; w++) { tempArray[w] = __convertOrText(group[w], ctrl[idx].spec, ctrl[idx].data); } } } else { for (w = 0; w < group.length; w++) { tempArray[w] = __convertOrText(group[w], ctrl[idx].spec, ctrl[idx].data); } if (tempArray.length > 1) { ctrl[idx].val = tempArray.join(excelVars.strTrennzeichen); } else { ctrl[idx].val = tempArray[0]; } } } }
+    var tag, suche, regex, group, text, idx = -1, w;
+    while (++idx < ctrl.length) {
+        tag = ctrl[idx].tag;
+        suche = tag + '.+' + ctrl[idx].xsbf;
+        regex = new RegExp(suche, 'g');
+        group = satz.match(regex);
+        if (group) {
+            var tempArray = [], p;
+            if (ctrl[idx].tag == '031N' || ctrl[idx].tag == '231@') {
+                if (satz.indexOf(excelVars.sbfDescriptor + '0') != -1) {
+                    // split on subfield-0 marker itself (no trailing space)
+                    // this handles cases like 'ƒ0;' as well as 'ƒ0 '
+                    text = group[0].split(excelVars.sbfDescriptor + '0');
+                    for (p = 0; p < text.length; p++) {
+                        tempArray[p] = __convertOrText(text[p], ctrl[idx].spec, ctrl[idx].data);
+                    }
+                    ctrl[idx].val = tempArray.join(excelVars.strTrennzeichen);
+                } else {
+                    for (w = 0; w < group.length; w++) {
+                        tempArray[w] = __convertOrText(group[w], ctrl[idx].spec, ctrl[idx].data);
+                    }
+                }
+            } else {
+                for (w = 0; w < group.length; w++) {
+                    tempArray[w] = __convertOrText(group[w], ctrl[idx].spec, ctrl[idx].data);
+                }
+                if (tempArray.length > 1) {
+                    ctrl[idx].val = tempArray.join(excelVars.strTrennzeichen);
+                } else {
+                    ctrl[idx].val = tempArray[0];
+                }
+            }
+        }
+    }
     return;
 }
 function __convertOrText(text, spec, data) { var idx = -1, tmp; while (++idx < data.length) { tmp = __convertText(text, spec, data[idx]); if (tmp !== '') return tmp; } return ''; }

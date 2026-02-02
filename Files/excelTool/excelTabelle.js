@@ -46,6 +46,8 @@ function onLoad() {
     loadDefsInProfD();
     einstellungKonfigurationstabelle();
     userAuswahlElement.value = getFileContent('ProfD', 'user\\\\csvDefinitionUser.txt', true, true);
+    // Initialize userAuswahl global with the loaded content to ensure appending works on first double-click
+    userAuswahl = userAuswahlElement.value;
     ladeKonfigurationstabelle();
     document.getElementById('treeBody').addEventListener('dblclick', function (e) {
         e = e || window.event;
