@@ -135,7 +135,7 @@ function __excelWriteCSV(o) {
         if (activeWindow.status != 'OK') {
             continue;
         }
-        satz = '\n' + __getExpansionFromP3VTX();
+        satz = '\n' + __et_getExpansionFromP3VTX();
         satz = satz.replace(/\r/g, '\n');
         satz = satz.replace(/\u001b./g, '');
         outval = __handleRecord(satz, ctrl);
@@ -216,17 +216,13 @@ function __readControl(inp, must) {
     return out;
 }
 
-function __getExpansionFromP3VTX() {
-    var satz = application.activeWindow.getVariable('P3VTX');
-    satz = satz.replace('<ISBD><TABLE>', '');
-    satz = satz.replace('</TABLE>', '');
-    satz = satz.replace(/\u001bI|\u001bN/g, '');
-    satz = satz.replace(/<BR>/g, '\n');
-    satz = satz.replace(/^$/gm, '');
-    satz = satz.replace(/^Eingabe:.*$/gm, '');
-    satz = satz.replace(/<a[^<]*>/gm, '');
-    satz = satz.replace(/<\/a>/gm, '');
-    return satz;
+function __et_getExpansionFromP3VTX() {
+    return application.activeWindow.getVariable('P3VTX')
+        .replace(/<ISBD><TABLE>|<\/TABLE>/g, '')
+        .replace(/\u001b[IN]/g, '')
+        .replace(/<BR>/g, '\n')
+        .replace(/<\/?a[^>]*>/gm, '')
+        .replace(/^Eingabe:.*$|^$/gm, '');
 }
 
 
