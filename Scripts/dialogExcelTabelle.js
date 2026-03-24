@@ -1,16 +1,22 @@
 function excelTabelle() {
-    showDialog('ProfD\\excelTool\\dialogExcelTabelle.html', 200, 100, 800, 450);
+    showDialog('ProfD\\excelTool\\dialogExcelTabelle.html', 200, 100, 800, 800);
 }
 
 function __excelGetFileContent(o) {
-    utility.sentDataToDialog(__excelGetDefinitions(o.etDirectory, o.etFilePath, o.noComments, o.noBlanks));
+    return utility.sentDataToDialog(__excelGetDefinitions(o.etDirectory, o.etFilePath, o.noComments, o.noBlanks));
 }
 
 function __excelGetDefinitions(dir, path, noCommentsFlag, noBlanksFlag) {
     var zeile,
         inhaltsLines = [],
         defInpFile = utility.newFileInput();
-    if (!defInpFile.openSpecial(dir, "\\" + path)) {
+        // normalize incoming path: accept forward slashes and optional leading backslashes
+        var normPath = String(path || '').replace(/\//g, '\\');
+
+        if (normPath.charAt(0) !== '\\') normPath = '\\' + normPath;
+
+        if (!defInpFile.openSpecial(dir, normPath)) {
+        alert('Die Datei ' + path + ' konnte nicht gefunden werden!');
         return '';
     }
 
@@ -36,7 +42,27 @@ function __excelWriteAuswahl(o) {
     out.setTruncate(true);
     out.write(newContents);
     out.close();
-    utility.sentDataToDialog(newContents);
+    return utility.sentDataToDialog(newContents);
+}
+
+function __excelWriteAuswahlAs(o) {
+    // o.idAuswahlZeilen contains the textarea content, o.idSaveAsFileName contains the desired filename
+    var newContents = utility.restoreStringData(o.idAuswahlZeilen || '');
+    var fname = String(o.idSaveAsFileName || 'csvDefinitionUser.txt').replace(/\\|\//g, '');
+    if (fname.indexOf('.') < 0) fname += '.txt';
+    var rel = 'user\\' + fname;
+    var out = utility.newFileOutput();
+    out.createSpecial('ProfD', rel);
+    out.setTruncate(true);
+    out.write(newContents);
+    out.close();
+    try {
+        // remember last used user file in profile for next dialog open
+        application.writeProfileString('Exceltool', 'LastUserFile', fname);
+    } catch (e) {
+        // non-fatal
+    }
+    return utility.sentDataToDialog(rel);
 }
 
 function __wikiWinibw() {
@@ -95,22 +121,23 @@ function __excelWriteCSV(o) {
 
     excelVars.strSystem = application.activeWindow.getVariable('P3GCN');
     cnt = parseInt(application.activeWindow.getVariable('P3GSZ'));
+    var useTabelle = (getProfileInt('Exceltool', 'UseUserConfig', 0)) ? 'Benutzertabelle' : getProfileString('Exceltool', 'Typ_Tabelle', 'Standardtabelle');
     try {
-        if ('Benutzertabelle' === o.idTabelle) {
+        if ('Benutzertabelle' === useTabelle) {
             excelVars.csvDefinitions = __readControl(utility.restoreStringData(o.idAuswahlZeilen), false);
-        } else if ('Standardtabelle' === o.idTabelle) {
+        } else if ('Standardtabelle' === useTabelle) {
             excelVars.csvDefinitions = __readControl(__excelGetDefinitions('ProfD', 'excelTool\\csvDefinition.txt', true, true), true);
         } else {
-            excelVars.csvDefinitions = __readControl(__excelGetDefinitions('ProfD', o.idTabelle, true, true), true);
+            excelVars.csvDefinitions = __readControl(__excelGetDefinitions('ProfD', useTabelle, true, true), true);
         }
     } catch (e) {
         alert('Fehler in Definition: ' + e.message);
-        utility.sentDataToDialog(false);
-        return;
+        return utility.sentDataToDialog(false);
     }
     content = __replaceDefinitionsWithLookup(excelVars.csvDefinitions);
     if (content === null) {
         utility.sentDataToDialog(false);
+        return;
     }
     ctrl = __createCtrlArray(content);
     header = __createHeader(ctrl);
@@ -157,7 +184,7 @@ function __excelWriteCSV(o) {
             " Titeln die gesuchten Felder nicht gefunden werden.\n";
     }
     shellExecute(listenPfad, 'edit', '');
-    utility.sentDataToDialog(ergebnis + '\nDie Datei wurde gespeichert unter: ' + listenPfad);
+    return utility.sentDataToDialog(ergebnis + '\nDie Datei wurde gespeichert unter: ' + listenPfad);
 }
 
 
@@ -260,15 +287,15 @@ function __replaceDefinitionsWithLookup(content) {
                 var p = utility.newPrompter();
                 var antwort = p.confirmEx(
                     'Hinweis zur Konfigurationstabelle',
-                    'Diese Zeile ist fehlerhaft:\n' + key + ': ' + mask + '\n\nInformationen zur Konfigurationstabelle finden Sie im WinIBW‑Wiki.\nWollen Sie die Informationen jetzt lesen?',
-                    'Ja',
-                    'Nein',
+                    'Diese Zeile ist fehlerhaft:\n' + key + ': ' + mask + "\nInformationen zur Konfigurationstabelle finden Sie im WinIBW‑Wiki.\nWollen Sie die Informationen jetzt lesen?",
+                    'YES',
+                    'NO',
                     '',
                     '',
                     ''
                 );
                 if (antwort === 0) {
-                    application.shellExecute('https://wiki.k10plus.de/x/agDUAw#Excel-Tabelleerstellen-KonfigurationdesExcel-Werkzeugs', 5, 'open', '');
+                    application.shellExecute('https://wiki.k10plus.de/x/agDUAw#Excel-Tabelleerstellen-KonfigurationdesExcel-Werkzeugs', 'open', '');
                 }
                 return null;
             }
@@ -698,7 +725,7 @@ function __excelLoadFilesInProfD() {
 
         if (!theDir.exists()) {
             alert("ProfD Verzeichnis existiert nicht.");
-            utility.sentDataToDialog("");
+            return utility.sentDataToDialog("");
         }
 
         var theDirEnum = theDir.directoryEntries;
@@ -712,6 +739,45 @@ function __excelLoadFilesInProfD() {
         for (var i = 0; i < arNames.length; i++) {
             fileList += arNames[i] + "\n";
         }
-        utility.sentDataToDialog(fileList);
+        return utility.sentDataToDialog(fileList);
     } catch (e) { alert('excelLoadFilesInProfD: ' + e.name + ': ' + e.message); }
+}
+
+function __excelLoadFilesInUser() {
+    try {
+        var arNames = [];
+        var theDir = getSpecialDirectory("ProfD");
+        theDir.append("user");
+
+        if (!theDir.exists()) {
+            // no user dir yet
+            return utility.sentDataToDialog("");
+        }
+
+        var theDirEnum = theDir.directoryEntries;
+        var theItem;
+        while (theDirEnum.hasMoreElements()) {
+            theItem = theDirEnum.getNext();
+            if (theItem.isFile()) arNames.push(theItem.leafName);
+        }
+        var fileList = "";
+        for (var i = 0; i < arNames.length; i++) { fileList += arNames[i] + "\n"; }
+        return utility.sentDataToDialog(fileList);
+    } catch (e) { alert('excelLoadFilesInUser: ' + e.name + ': ' + e.message); }
+}
+
+function __excelReadUserFile(o) {
+    try {
+        var fname = String(o.idOpenFileName || '');
+        if (!fname) return utility.sentDataToDialog('');
+        var thePath = '\\user\\' + fname;
+        var inp = utility.newFileInput();
+        if (!inp.openSpecial('ProfD', thePath)) { alert('Datei ' + fname + ' nicht gefunden'); return utility.sentDataToDialog(''); }
+        var lines = [];
+        var l = '';
+        for (l = ''; !inp.isEOF();) { l = inp.readLine(); lines.push(l); }
+        inp.close();
+        try { application.writeProfileString('Exceltool', 'LastUserFile', fname); } catch (e) { }
+        return utility.sentDataToDialog(lines.join('\n'));
+    } catch (e) { alert('__excelReadUserFile: ' + e.name + ': ' + e.message); }
 }

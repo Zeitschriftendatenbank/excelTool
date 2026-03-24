@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="./excelTabelle.css" />
     <script src="./W4DialogFunctions.js"></script>
     <script src="./excelTabelle.js"></script>
-    <script type="text/javascript">setTimeout(function () { onLoad(); }, 5);</script>
+    <script type="text/javascript">setTimeout(function () { onLoad().catch(function (error) { alert('Fehler beim Laden des Dialogs:\n' + error.message); }); }, 400);</script>
 </head>
 <body>
     <div class="tabs">
@@ -70,25 +70,28 @@
             <div class="row">
                 <div class="col">
                     <label for="idTabelle">Zu verwendende Tabelle</label>
-                    <select id="idTabelle" onchange="selectTabelle()" style="width:100%">
+                    <select id="idTabelle" onchange="selectTabelle()">
                         <option value="Standardtabelle" selected>Standardtabelle</option>
-                        <option value="Benutzertabelle">Benutzertabelle</option>
                     </select>
+                </div>
+                <div class="col">
+                    <input type="checkbox" id="checkUser" onchange="displayUser()" /><label for="checkUser">Eigene Konfiguration verwenden</label>
                 </div>
             </div>
             <div class="row" style="margin-top:10px">
-                <div class="col" style="width:100%">
+                <div class="col">
                     <div id="idDefault" role="grid" aria-label="PicaPlus-Kategorien">
                         <div class="tree-header">PicaPlus-Kategorien</div>
                         <div id="treeBody" class="tree-body" tabindex="0"></div>
                     </div>
                 </div>
                 <div class="col">
-                    <label>Eigene Konfiguration</label>
                     <textarea id="idAuswahlZeilen" wrap="off" style="width:100%"></textarea>
                     <div class="btns">
                         <input type="button" class="button" onclick="auswahlSpeichern()" value="Speichern" />
-                        <input type="button" class="cancel" onclick="auswahlLoeschen()" value="Alles löschen" />
+                        <input type="button" class="button" onclick="auswahlSpeichernAls()" value="Speichern als..." />
+                        <input type="button" class="button" onclick="auswahlOeffnen()" value="Öffnen" />
+                        <!--<input type="button" class="cancel" onclick="auswahlLoeschen()" value="Alles löschen" />-->
                     </div>
                     <div>
                         <p id="idLabelAuswahl" class="ok"></p>
@@ -102,9 +105,9 @@
         <p id="idLabelInfos3">Beim Auswerten der Exemplare werden nur solche berücksichtigt, die mit Ihren Angaben
             im obigen Feld übereinstimmen. Achten Sie auch auf Groß‑ und Kleinschreibung!</p>
         <div class="btns">
-            <input type="button" class="button" onclick="runScript('__wikiWinibw()')" value="Allgemeine Hilfe" />
-            <input type="button" class="button" onclick="runScript('__wikiAnzeigen2()')" value="Konfiguration" />
-            <input type="button" class="button" onclick="runScript('__wikiAnzeigen3()')" value="Trennzeichen" />
+            <input type="button" class="button" onclick="wikiWinibw()" value="Allgemeine Hilfe" />
+            <input type="button" class="button" onclick="wikiAnzeigen2()" value="Konfiguration" />
+            <input type="button" class="button" onclick="wikiAnzeigen3()" value="Trennzeichen" />
         </div>
     </div>
 </body>

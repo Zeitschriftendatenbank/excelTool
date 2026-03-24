@@ -63,6 +63,19 @@ label {
     margin: .35em 0 .15em
 }
 
+/* Keep labels and inputs on one line inside configuration columns */
+.col label {
+    display: inline-block;
+    margin: .35em 0 .15em;
+}
+
+.col input[type="text"], .col select, .col textarea {
+    display: inline-block;
+    width: calc(100% - 150px);
+    box-sizing: border-box;
+    vertical-align: middle;
+}
+
 textarea {
     min-height: 440px
 }
@@ -80,12 +93,15 @@ legend {
 
 .row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 16px
+    flex-wrap: nowrap;
+    gap: 16px;
+    overflow-x: auto;
 }
 
 .col {
-    flex: 1 1 280px;
+    box-sizing: border-box;
+    /* fixed half width columns; subtract half the gap so two columns fit neatly */
+    flex: 0 0 calc(50% - 8px);
     padding-right: 9px;
 }
 
@@ -152,7 +168,11 @@ legend {
     cursor: default;
     user-select: none;
     white-space: pre-wrap;
+    /* allow long unbroken strings to wrap instead of expanding the column */
+    word-break: break-word;
 }
+
+/* (unified vertical-scroll reverted; row provides horizontal scroll if needed) */
 
 .rowConfig:nth-child(odd) {
     background: #fafafa;

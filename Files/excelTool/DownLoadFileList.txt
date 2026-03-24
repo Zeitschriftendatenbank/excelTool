@@ -3,3 +3,4 @@ source=excelTabelle.css, destination=%APPDATA%\OCLC\WinIBW4\excelTool\excelTabel
 source=W4DialogFunctions.js, destination=%APPDATA%\OCLC\WinIBW4\excelTool\W4DialogFunctions.js
 source=W4DialogStyle.css, destination=%APPDATA%\OCLC\WinIBW4\excelTool\W4DialogStyle.css
 source=dialogExcelTabelle.html, destination=%APPDATA%\OCLC\WinIBW4\excelTool\dialogExcelTabelle.html
+source=csvDefinition.txt, destination=%APPDATA%\OCLC\WinIBW4\excelTool\csvDefinition.txt
