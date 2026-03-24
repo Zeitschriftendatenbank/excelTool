@@ -220,11 +220,6 @@ function __readControl(inp, must) {
             continue;
         }
         idx = tmp.indexOf(':');
-        // if a space occurs before the colon -> error
-        if (tmp.indexOf(' ') < idx) {
-            throw new Error(200, 'Die Spaltenüberschriften dürfen keine Blanks enthalten.\nZeile:\n' + line);
-        }
-
         if (idx < 0) {
             if (must) {
                 throw new Error(200, 'Die interne Definitionsdatei ist fehlerhaft!\nZeile:\n' + line);
@@ -232,8 +227,11 @@ function __readControl(inp, must) {
             out.push(tmp);
             out.push(tmp);
         } else {
-            out.push(tmp.substr(0, idx).replace(/\s+$/, '').replace(/^\s+/, ''));
-            out.push(tmp.substr(idx + 1).replace(/\s+$/, '').replace(/^\s+/, ''));
+            // Trim whitespace around header and definition; allow spaces inside header
+            var hdr = tmp.substr(0, idx).replace(/\s+$/, '').replace(/^\s+/, '');
+            var def = tmp.substr(idx + 1).replace(/\s+$/, '').replace(/^\s+/, '');
+            out.push(hdr);
+            out.push(def);
         }
         cnt++;
     }
@@ -283,6 +281,11 @@ function __replaceDefinitionsWithLookup(content) {
 
         newc.push(key);
         if (defval === null) {
+            // Accept simple tag-only masks like '011' or '011@' as valid tags
+            if (/^[KS]?\d{3}@?$/.test(mask)) {
+                newc.push(mask);
+                continue;
+            }
             if (!__checkIfTag(mask)) {
                 var p = utility.newPrompter();
                 var antwort = p.confirmEx(
@@ -427,7 +430,12 @@ function __getTagInfos(ctrl, tmpline) {
     } else {
         ctrl.xsbf = '';
     }
+    // find first space separating tag and the rest; if absent, the whole tmpline is the tag
     idx = tmpline.indexOf(' ');
+    if (idx < 0) {
+        ctrl.tag = tmpline;
+        return '';
+    }
     ctrl.tag = tmpline.substr(0, idx);
     return tmpline.substr(idx + 1);
 }
@@ -482,8 +490,19 @@ function __andPartitions(termOr, tmpline) {
  * @returns {string|null} The remaining unparsed string, or null on error.
  */
 function __sbfPart(obj, tmpline) {
-    // Defensive: return null if input is missing or not a string
-    if (!tmpline || typeof tmpline !== "string") return null;
+    // Defensive: return null if input is not a string
+    if (typeof tmpline !== "string") return null;
+
+    // If no subfield specification is provided (empty string), treat as whole-field
+    // i.e. return the raw field content: no prefix/suffix/subfield marker
+    if (tmpline.length === 0) {
+        var fieldWhole = {};
+        fieldWhole.pre = '';
+        fieldWhole.sbf = '';
+        fieldWhole.post = '';
+        obj.field = fieldWhole;
+        return tmpline;
+    }
 
     var field = {}; // Will hold the parsed field structure
 
@@ -686,8 +705,26 @@ function __createResult(satz, ctrl) {
     }
     return;
 }
-function __convertOrText(text, spec, data) { var idx = -1, tmp; while (++idx < data.length) { tmp = __convertText(text, spec, data[idx]); if (tmp !== '') return tmp; } return ''; }
+function __convertOrText(text, spec, data) {
+    // defensive: if data is missing, return the raw field content (strip leading tag)
+    if (!data || !data.length) {
+        var p = text.indexOf(' ');
+        var raw = (p >= 0) ? text.substr(p + 1) : text;
+        return String(raw).replace(/^\s+|\s+$/g, '');
+    }
+    var idx = -1, tmp;
+    while (++idx < data.length) { tmp = __convertText(text, spec, data[idx]); if (tmp !== '') return tmp; }
+    return '';
+}
 function __convertText(text, spec, andArr) {
+    // If any element in andArr has no subfield marker (whole-field spec), return raw field content.
+    for (var _w = 0; _w < andArr.length; _w++) {
+        if (!andArr[_w].sbf) {
+            var p = text.indexOf(' ');
+            var raw = (p >= 0) ? text.substr(p + 1) : text;
+            return String(raw).replace(/^\s+|\s+$/g, '');
+        }
+    }
     var tmp = '', idx = -1, idxe, jdxa, jdxe, test = false, tmpArray, tmpSf, jdxl; while (++idx < andArr.length) { jdxa = text.indexOf(andArr[idx].sbf); jdxl = text.lastIndexOf(andArr[idx].sbf); if (jdxa >= 0) { if (jdxa != jdxl) { tmpArray = []; while (test === false) { jdxe = text.indexOf(excelVars.sbfDescriptor, jdxa + 1); if (jdxe < 0) { jdxe = text.length; } tmpSf = andArr[idx].pre + text.substr(jdxa + 2, jdxe - jdxa - 2) + andArr[idx].post; tmpArray.push(tmpSf); if (jdxa == jdxl) test = true; jdxa = text.indexOf(andArr[idx].sbf, jdxa + 1); } tmp += tmpArray.join(excelVars.strTrennzeichen); } else { jdxe = text.indexOf(excelVars.sbfDescriptor, jdxa + 1); if (jdxe < 0) { jdxe = text.length; } tmp += andArr[idx].pre + text.substr(jdxa + 2, jdxe - jdxa - 2) + andArr[idx].post; } } }
     if (spec == 'S') { idx = tmp.indexOf('@'); if (idx < 0) { tmp = '@' + tmp; } else { tmp = tmp.substr(idx); } idx = tmp.indexOf('{'); while (idx >= 1) { idxe = tmp.indexOf(' ', idx); if (idxe < 0) { tmp = tmp.substr(0, idx - 1); } else { tmp = tmp.substr(0, idx - 1) + tmp.substr(idxe + 1); } idx = tmp.indexOf('{'); } tmp = tmp.substr(1); }
     else if (spec !== 'K') { tmp = tmp.replace('@', ''); tmp = tmp.replace('{', ''); }
