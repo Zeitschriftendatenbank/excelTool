@@ -57,8 +57,15 @@ async function onLoad() {
                     var inp = document.getElementById('idSaveAsFileName');
                     if (!inp) { inp = document.createElement('input'); inp.type = 'hidden'; inp.id = 'idSaveAsFileName'; inp.name = 'idSaveAsFileName'; form.appendChild(inp); }
                     inp.value = lastFile;
-                    userAuswahlElement.value = await getFileContent('ProfD', 'user\\\\' + lastFile, true, true);
-                    userAuswahl = userAuswahlElement.value;
+                userAuswahlElement.value = await getFileContent('ProfD', 'user\\\\' + lastFile, true, true);
+                userAuswahl = userAuswahlElement.value;
+                // create and sync hidden field used by runScript to send textarea content
+                var hidden = document.getElementById('hid_idAuswahlZeilen');
+                if (!hidden) { hidden = document.createElement('input'); hidden.type = 'hidden'; hidden.id = 'hid_idAuswahlZeilen'; hidden.name = 'idAuswahlZeilen'; form.appendChild(hidden); }
+                hidden.value = userAuswahlElement.value;
+                userAuswahlElement.addEventListener('input', function () { hidden.value = this.value; });
+                // indicate which user file was loaded (same behaviour as opening via button)
+                var lbl = document.getElementById('idLabelAuswahl'); if (lbl) lbl.innerHTML = 'Auswahl geladen: ' + lastFile;
         }
         // read selected table type from profile and load that configuration (falls back to default in loader)
         const tabTyp = await getProfileString('Exceltool', 'Typ_Tabelle', 'Standardtabelle');
@@ -280,6 +287,17 @@ async function auswahlSpeichern() {
     try {
         // save current textarea to last used filename (use save-as backend)
         var inp = document.getElementById('idSaveAsFileName');
+        // ensure current textarea content is passed to backend
+        var ta = document.getElementById('idAuswahlZeilen');
+        var textVal = ta ? ta.value : '';
+        var hiddenTA = document.getElementById('idAuswahlZeilen');
+        // create a hidden input for form submission if the textarea isn't considered by runScript
+        // (some runtimes only serialize inputs by name)
+        var hidden = document.getElementById('hid_idAuswahlZeilen');
+        if (!hidden) {
+            hidden = document.createElement('input'); hidden.type = 'hidden'; hidden.id = 'hid_idAuswahlZeilen'; hidden.name = 'idAuswahlZeilen'; form.appendChild(hidden);
+        }
+        hidden.value = textVal;
         if (!inp) {
             inp = document.createElement('input'); inp.type = 'hidden'; inp.id = 'idSaveAsFileName'; inp.name = 'idSaveAsFileName'; form.appendChild(inp);
             inp.value = 'csvDefinitionUser.txt';
@@ -320,10 +338,12 @@ function _closestByClass(el, className) {
 function waehleZeile() {
     if (selectedIndex < 0 || selectedIndex >= arrayTabelle.length) return;
     const value = arrayTabelle[selectedIndex];
-    userAuswahl = (userAuswahl ? `${userAuswahl}\n` : '') + value;
+    // Use current textarea contents as base (covers manual clears and deletions)
+    const dst = document.getElementById('idAuswahlZeilen');
+    const base = dst ? dst.value : userAuswahl;
+    userAuswahl = (base ? base + '\n' : '') + value;
     bContentsChanged = true;
     const lbl = document.getElementById('idLabelAuswahl'); if (lbl) lbl.innerHTML = 'Auswahl geändert.';
-    const dst = document.getElementById('idAuswahlZeilen');
     // write updated selection into the textarea
     if (dst) {
         dst.value = userAuswahl;
@@ -507,6 +527,13 @@ async function auswahlSpeichernAls() {
         // ensure extension
         if (fname.indexOf('.') < 0) fname += '.txt';
 
+        // ensure textarea content is passed to backend as well
+        var ta = document.getElementById('idAuswahlZeilen');
+        var textVal = ta ? ta.value : '';
+        var hidden = document.getElementById('hid_idAuswahlZeilen');
+        if (!hidden) { hidden = document.createElement('input'); hidden.type = 'hidden'; hidden.id = 'hid_idAuswahlZeilen'; hidden.name = 'idAuswahlZeilen'; form.appendChild(hidden); }
+        hidden.value = textVal;
+
         // create hidden input to pass filename to the backend script
         var inp = document.getElementById('idSaveAsFileName');
         if (!inp) {
@@ -565,6 +592,10 @@ async function auswahlOeffnen() {
                 const content = await runScript('__excelReadUserFile');
                 const ta = document.getElementById('idAuswahlZeilen');
                 if (ta) { ta.value = content; ta.focus(); }
+                    // update hidden field used for runScript submission
+                    var hidden = document.getElementById('hid_idAuswahlZeilen');
+                    if (!hidden) { hidden = document.createElement('input'); hidden.type = 'hidden'; hidden.id = 'hid_idAuswahlZeilen'; hidden.name = 'idAuswahlZeilen'; form.appendChild(hidden); }
+                    hidden.value = content;
                 const lbl = document.getElementById('idLabelAuswahl'); if (lbl) lbl.innerHTML = 'Auswahl geladen: ' + chosen;
                 bContentsChanged = false;
             } catch (e) { alert('Fehler beim Laden der Datei:\n' + e.message); }
