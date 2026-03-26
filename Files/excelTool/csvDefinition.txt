@@ -64,13 +64,14 @@ Ansetzungssachtitel:   025@ $a
 Nebentitel:            046C $a
 Unterreihe:            021C "*$l*"+$a
 ZSkurztitel:           026C $a
-ErschVerlauf4024:      031N "/s$f"+"/v$d"+"/a$e"+"/d$b"+"/m$c"+"/b$j"+"/k$g"+"/V$n"+"/A$o"+"/D$l"+"/M$m"+"/E$k"+"/K$q"+"-$6"
+ErschVerlauf4024:      031N
 Ort:                   033A $p
 Verlag:                033A $n
 Ort+Verlag:            033A $p+" : $n"
 Materialbenennung:     034D $a
 SonstigeTechnAngaben:  034M $a
 Begleitmaterial:       034K $a
+Reproduktionshinweis:  037J
 DDC:                   045U $e
 SSG-Angaben:           045T $a
 //DNBSachgruppe:         045E $a
@@ -84,7 +85,7 @@ SSG-Angaben:           045T $a
 VerknüpfungBibdatei:   247C "!$9!"
 Kommentar:             237A $a+$l
 Bestandsschutz:        220Bx00 $a
-Provenienzvermerke:    220A "@a$a"+"@b$b"+"@e$e"+"@k$k"+"@m$m"+"@p$p"
+Provenienzvermerke:    220A
 LokaleNotation6700:    245Z $a
 Exemplarfeld:          208@ $a+" : $b"
 Standort:              209Ax09 $f
@@ -97,9 +98,10 @@ URN7136:               204U $0
 DOI7137:               204P $0
 Handle7138:            204R $0
 ExemplarID7800:        203@ $0
+RegID:                 206Y $0
 Zugangsnr:             209C $a
 Verbuchungsnr:         209G $a
-Bestandsangaben7120:   231@ "/v$d"+"/b$j"+"/V$n"+"/E$k"+"-$6"
+Bestandsangaben7120:   231@
 Bestandsangaben7121:   231B $a
 Text8031:              209Bx31 $a
 Bestand8032:           209Bx32 $a
