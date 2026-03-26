@@ -93,7 +93,7 @@ var excelVars = {
  * Generates a CSV file from the current selection of titles or records.
  * 
  * This function reads CSV definitions, processes each record, and writes the results to a CSV file
- * in a special directory. It updates the UI with the result and the file path, and copies the path to the clipboard.
+ * in a special directory. It updates the UI with the result and the file path.
  * 
  * @throws {Error} If the script is not called from a valid context (Kurztitelliste or Präsentation eines Titels).
  * @returns {void|boolean} Returns false if CSV definitions cannot be read; otherwise, writes the CSV file and updates the UI.
@@ -176,7 +176,7 @@ function __excelWriteCSV(o) {
     application.activeWindow.command('s d', false);
     application.activeWindow.command('s k', false);
 
-    activeWindow.clipboard = listenPfad;
+    //activeWindow.clipboard = listenPfad;
 
     ergebnis = ctrl.cnt + ' Zeilen für ' + outcnt + ' Titel ausgegeben.';
     if (outcnt != cnt) {
@@ -281,8 +281,9 @@ function __replaceDefinitionsWithLookup(content) {
 
         newc.push(key);
         if (defval === null) {
-            // Accept simple tag-only masks like '011' or '011@' as valid tags
-            if (/^[KS]?\d{3}@?$/.test(mask)) {
+            // Accept simple tag-only masks like '011', '011@', '209A' or '209Ax00' as valid tags
+            // Pattern: optional K/S, three digits, optional uppercase letter or '@', optional suffix 'x00'..'x09'
+            if (/^[KS]?\d{3}(?:[A-Z@])?(?:x0[0-9])?$/.test(mask)) {
                 newc.push(mask);
                 continue;
             }
@@ -754,14 +755,15 @@ function __objToString(obj) {
     return str.substring(0, str.length - 1) + "\n}";
 }
 
-function __excelLoadFilesInProfD() {
+function __excelLoadFilesInDefinitions() {
     try {
         var arNames = [];
         var theDir = getSpecialDirectory("ProfD");
-        theDir.append("");
+        // look into the Definitions subfolder under ProfD
+        theDir.append("Definitions");
 
         if (!theDir.exists()) {
-            alert("ProfD Verzeichnis existiert nicht.");
+            // if the Definitions folder doesn't exist, return empty list
             return utility.sentDataToDialog("");
         }
 
@@ -771,13 +773,12 @@ function __excelLoadFilesInProfD() {
             theItem = theDirEnum.getNext();
             if (theItem.isFile() && -1 < theItem.leafName.indexOf("csvDefinition")) arNames.push(theItem.leafName);
         }
-        //arNames.sort();
         var fileList = "";
         for (var i = 0; i < arNames.length; i++) {
             fileList += arNames[i] + "\n";
         }
         return utility.sentDataToDialog(fileList);
-    } catch (e) { alert('excelLoadFilesInProfD: ' + e.name + ': ' + e.message); }
+    } catch (e) { alert('excelLoadFilesInDefinitions: ' + e.name + ': ' + e.message); }
 }
 
 function __excelLoadFilesInUser() {
