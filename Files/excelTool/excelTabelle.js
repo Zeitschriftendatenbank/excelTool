@@ -48,7 +48,7 @@ async function onLoad() {
         userAuswahlElement = document.getElementById('idAuswahlZeilen');
         await trennzeichen();
         await separator();
-        await loadDefsInProfD();
+        await loadDefsInDefinitions();
         // always try to read the user's personal definitions (may be absent) without throwing
                 if (userAuswahlElement) {
                     // load last used filename from profile (fallback to csvDefinitionUser.txt)
@@ -468,10 +468,10 @@ async function getFileContent(dir, path, noComments, noBlanks) {
 
 /**
  * Populates the <select> element with id "idTabelle" from a newline-separated list
- * returned by runScript('__excelLoadFilesInProfD()').
+ * returned by runScript('__excelLoadFilesInDefinitions()').
  *
  * Behavior:
- * - Calls runScript('__excelLoadFilesInProfD()') and returns early if the result is falsy.
+ * - Calls runScript('__excelLoadFilesInDefinitions()') and returns early if the result is falsy.
  * - Splits the returned string on '\n' to obtain candidate filenames.
  * - Trims CR characters and surrounding whitespace from each filename using an ES3-compatible approach.
  * - Skips empty entries and filenames already present as option values in the target select.
@@ -481,12 +481,12 @@ async function getFileContent(dir, path, noComments, noBlanks) {
  *
  * Side effects: Mutates the DOM by appending <option> elements to the select#idTabelle.
  *
- * @function loadDefsInProfD
+ * @function loadDefsInDefinitions
  * @returns {void} No value is returned.
  * @see runScript
  */
-async function loadDefsInProfD() {
-    const defFiles = await runScript('__excelLoadFilesInProfD()');
+async function loadDefsInDefinitions() {
+    const defFiles = await runScript('__excelLoadFilesInDefinitions()');
     if (!defFiles) return;
     const defArray = defFiles.split('\n');
     const select = document.getElementById('idTabelle');
