@@ -362,7 +362,8 @@ function __checkIfTag(text) {
         if ((text.charAt(idx) < '0') || ('9' < text.charAt(idx++))) return false;
     }
 
-    if (text.length <= idx) return false;
+    // Accept end-of-string or space after parsed tag/suffix
+    if (text.length <= idx) return true;
     return (text.charAt(idx) == ' ');
 }
 
