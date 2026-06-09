@@ -47,7 +47,9 @@ function __excelWriteAuswahl(o) {
 
 function __excelWriteAuswahlAs(o) {
     // o.idAuswahlZeilen contains the textarea content, o.idSaveAsFileName contains the desired filename
+    //alert('Attempting to save file with name: ' + o.idSaveAsFileName);
     var newContents = utility.restoreStringData(o.idAuswahlZeilen || '');
+    //alert('Text to save:\n' + newContents + '\nFilename:\n' + o.idSaveAsFileName);
     var fname = String(o.idSaveAsFileName || 'csvDefinitionUser.txt').replace(/\\|\//g, '');
     if (fname.indexOf('.') < 0) fname += '.txt';
     var rel = 'user\\' + fname;
