@@ -547,7 +547,7 @@ async function auswahlSpeichernAls() {
         const lbl = document.getElementById('idLabelAuswahl'); if (lbl) lbl.innerHTML = 'Auswahl gespeichert als ' + fname;
         bContentsChanged = false;
     } catch (error) {
-        alert('Fehler beim Speichern als:\n' + error.message);
+        alert('Fehler beim Speichern als:\n' + error);
     }
 }
 
@@ -598,10 +598,10 @@ async function auswahlOeffnen() {
                     hidden.value = content;
                 const lbl = document.getElementById('idLabelAuswahl'); if (lbl) lbl.innerHTML = 'Auswahl geladen: ' + chosen;
                 bContentsChanged = false;
-            } catch (e) { alert('Fehler beim Laden der Datei:\n' + e.message); }
+            } catch (e) { alert('Fehler beim Laden der Datei:\n' + e); }
             document.body.removeChild(overlay);
         });
     } catch (error) {
-        alert('Fehler beim Öffnen der Benutzerdatei:\n' + error.message);
+        alert('Fehler beim Öffnen der Benutzerdatei:\n' + error);
     }
 }
