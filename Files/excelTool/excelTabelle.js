@@ -62,8 +62,8 @@ async function onLoad() {
                 // create and sync hidden field used by runScript to send textarea content
                 var hidden = document.getElementById('hid_idAuswahlZeilen');
                 if (!hidden) { hidden = document.createElement('input'); hidden.type = 'hidden'; hidden.id = 'hid_idAuswahlZeilen'; hidden.name = 'idAuswahlZeilen'; form.appendChild(hidden); }
-                hidden.value = userAuswahlElement.value;
-                userAuswahlElement.addEventListener('input', function () { hidden.value = this.value; });
+                hidden.value = escapeForExeScript(userAuswahlElement.value);
+                userAuswahlElement.addEventListener('input', function () { hidden.value = escapeForExeScript(this.value); });
                 // indicate which user file was loaded (same behaviour as opening via button)
                 var lbl = document.getElementById('idLabelAuswahl'); if (lbl) lbl.innerHTML = 'Auswahl geladen: ' + lastFile;
         }
@@ -297,7 +297,7 @@ async function auswahlSpeichern() {
         if (!hidden) {
             hidden = document.createElement('input'); hidden.type = 'hidden'; hidden.id = 'hid_idAuswahlZeilen'; hidden.name = 'idAuswahlZeilen'; form.appendChild(hidden);
         }
-        hidden.value = textVal;
+        hidden.value = escapeForExeScript(textVal);
         if (!inp) {
             inp = document.createElement('input'); inp.type = 'hidden'; inp.id = 'idSaveAsFileName'; inp.name = 'idSaveAsFileName'; form.appendChild(inp);
             inp.value = 'csvDefinitionUser.txt';
@@ -532,7 +532,7 @@ async function auswahlSpeichernAls() {
         var textVal = ta ? ta.value : '';
         var hidden = document.getElementById('hid_idAuswahlZeilen');
         if (!hidden) { hidden = document.createElement('input'); hidden.type = 'hidden'; hidden.id = 'hid_idAuswahlZeilen'; hidden.name = 'idAuswahlZeilen'; form.appendChild(hidden); }
-        hidden.value = textVal;
+        hidden.value = escapeForExeScript(textVal);
 
         // create hidden input to pass filename to the backend script
         var inp = document.getElementById('idSaveAsFileName');
@@ -595,7 +595,7 @@ async function auswahlOeffnen() {
                     // update hidden field used for runScript submission
                     var hidden = document.getElementById('hid_idAuswahlZeilen');
                     if (!hidden) { hidden = document.createElement('input'); hidden.type = 'hidden'; hidden.id = 'hid_idAuswahlZeilen'; hidden.name = 'idAuswahlZeilen'; form.appendChild(hidden); }
-                    hidden.value = content;
+                    hidden.value = escapeForExeScript(content);
                 const lbl = document.getElementById('idLabelAuswahl'); if (lbl) lbl.innerHTML = 'Auswahl geladen: ' + chosen;
                 bContentsChanged = false;
             } catch (e) { alert('Fehler beim Laden der Datei:\n' + e); }
@@ -604,4 +604,21 @@ async function auswahlOeffnen() {
     } catch (error) {
         alert('Fehler beim Öffnen der Benutzerdatei:\n' + error);
     }
+}
+
+// Escape textarea / filename content so the dialog-side serialisation
+// (which only escapes quotes) produces a syntactically valid JS literal
+// when the string is inlined into the script call by `W4DialogFunctions.js`.
+function escapeForExeScript(s) {
+    if (s === null || s === undefined) return '';
+    var t = String(s)
+        .replace(/\\/g, '\\\\')   // backslash -> double-backslash
+        .replace(/\r\n/g, '\\x1E')    // CRLF -> \\x1E (record separator)
+        .replace(/\r/g, '\\x1E')       // CR -> \\x1E
+        .replace(/\n/g, '\\x1E');      // LF -> \\x1E
+    return t.replace(/[\u0080-\uFFFF]/g, function (c) {
+        var code = c.charCodeAt(0).toString(16).toUpperCase();
+        while (code.length < 4) code = '0' + code;
+        return '\\u' + code;
+    });
 }
